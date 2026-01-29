@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* globals.css or tailwind.config.ts */
+
+@theme inline {
+  --color-primary: #22384D;
+  --color-secondary: #22384D;
+  --color-text: #EBF1FA;
+  --color-pulse: #5F7F99;
+  --color-bold: #101F2C;
+}
+
+
+/* Example global background gradient */
+body {
+  background: linear-gradient(
+    to bottom,
+    var(--color-sixth)   0%,    
+    var(--color-sixth)   60%,    
+    var(--color-fifth)   85%,    
+    var(--color-fourth)  100%    
+  );
+  background-attachment: fixed;
+  font-family: serif;
+}
