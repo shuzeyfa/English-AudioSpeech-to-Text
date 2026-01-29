@@ -46,7 +46,7 @@ export default function App() {
           }
         }
 
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/webm",
           })
@@ -56,6 +56,8 @@ export default function App() {
           })
 
           setFile(audioFile);
+
+          await handleTranscribe(audioFile);
 
           stream.getTracks().forEach((track) => track.stop());
         }
@@ -70,20 +72,21 @@ export default function App() {
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop()
-    setIsRecording(false)
+    setIsRecording(false);
   }
 
 
   
-  async function handleTranscribe() {
-    if (!file) return
+  async function handleTranscribe(audioFile?: File) {
+    const finalFile = audioFile ?? file;
+    if (!finalFile) return
 
     try {
       setloading(true)
 
       const res = await fetch("/api/transcribe", {
         method: "POST",
-        body: await file.arrayBuffer(),
+        body: await finalFile.arrayBuffer(),
       })
 
       const data = await res.json()
@@ -104,7 +107,7 @@ export default function App() {
   return (
     <div className=" realtive min-h-screen bg-linear-to-r from-primary to-secondary overflow-hidden ">
 
-      <div className=" absolute inset-0 overflow-hidden pointer-events-none ">
+      <div className=" absolute inset-0 hidden md:block overflow-hidden pointer-events-none ">
         <div className=" absolute top-32 left-10 w-72 h-72 rounded-full blur-3xl animate-pulse bg-pulse  " />
         <div className=" absolute top-1/2 right-1/2 w-72 h-72 rounded-full  blur-3xl animate-pulse overflow-hidden bg-pulse opacity-30  " />
         <div className=" absolute bottom-32 right-30 w-72 h-72 rounded-full overflow-hidden blur-3xl animate-pulse bg-pulse" />
@@ -149,9 +152,9 @@ export default function App() {
             <div className=" w-32 h-32 bg-[#5A7086] group-hover:bg-pulse rounded-2xl rotate-0 group-hover:rotate-6 transition-transform duration-100 ease-in-out flex flex-col items-center justify-center ">
               <Upload className=" w-[60%] h-[60%] text-white/90 "/>
             </div>
-            <div className=" text-2xl text-white/90 font-bold ">
+            <div className=" text-2xl text-white/90 text-center font-bold ">
               Upload English Audio</div>
-            <div className=" text-white/90 ">
+            <div className=" text-white/90 text-center ">
               Drag And Drop Your English Audio File Here, or Browse</div>
             <div className=" flex gap-4 border-2 text-white/90 rounded-2xl border-pulse px-4 py-2 ">
               <AudioLines /> MP3, WAV
@@ -171,7 +174,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className=" text-white/90 flex max-w-md mx-auto justify-center mt-12 text-2xl ">
+        <div className=" text-white/90 text-[min(10vw, 70px)] max-w-md mx-auto mt-12 text-2xl text-center ">
           Record Directly from your Microphone
         </div>
 
@@ -211,7 +214,7 @@ export default function App() {
         <div className="max-w-4xl mx-auto my-8 space-y-4">
 
           <button
-            onClick={handleTranscribe}
+            onClick={() => handleTranscribe()}
             disabled={loading}
             className="px-6 py-3 rounded-xl bg-gray-900 hover:cursor-pointer hover:bg-gray-800 text-white font-bold border border-gray-800 disabled:opacity-50"
           >
