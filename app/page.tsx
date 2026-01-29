@@ -146,7 +146,7 @@ export default function App() {
         <div>
           <label
           htmlFor="audio-upload" 
-          className=" w-full md:w-4xl h-100 z-20 my-12 mx-auto bg-secondary hover:bg-primary hover:cursor-pointer rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-evenly shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-transform duration-100 ease-in-out group ">
+          className=" w-[95%] md:w-4xl h-100 z-20 my-12 mx-auto bg-secondary hover:bg-primary hover:cursor-pointer rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-evenly shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-transform duration-100 ease-in-out group ">
             <input onChange={handleUpload} id="audio-upload" accept="audio//mp3,audio/wav" className="hidden" type="file" />
             
             <div className=" w-32 h-32 bg-[#5A7086] group-hover:bg-pulse rounded-2xl rotate-0 group-hover:rotate-6 transition-transform duration-100 ease-in-out flex flex-col items-center justify-center ">
@@ -194,7 +194,7 @@ export default function App() {
           >
             <span
               className={`
-                absolute inset-0
+                absolute inset-0 mb-4
                 bg-linear-to-r from-transparent via-white/50 to-transparent
                 -translate-x-full group-hover:translate-x-full
                 transition-transform duration-500 ease-in-out
