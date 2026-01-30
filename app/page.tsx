@@ -178,7 +178,7 @@ export default function App() {
           Record Directly from your Microphone
         </div>
 
-        <div className="relative w-full md:w-80 mx-auto mt-8 group">
+        <div className="relative w-[90%] md:w-80 mx-auto mt-8 group">
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`
