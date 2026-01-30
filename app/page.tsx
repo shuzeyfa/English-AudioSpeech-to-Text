@@ -105,7 +105,7 @@ export default function App() {
 
 
   return (
-    <div className=" realtive min-h-screen bg-linear-to-r from-primary to-secondary overflow-hidden ">
+    <div className=" realtive min-h-screen pb-24 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
 
       <div className=" absolute inset-0 hidden md:block overflow-hidden pointer-events-none ">
         <div className=" absolute top-32 left-10 w-72 h-72 rounded-full blur-3xl animate-pulse bg-pulse  " />
@@ -178,7 +178,7 @@ export default function App() {
           Record Directly from your Microphone
         </div>
 
-        <div className="relative w-full md:w-80 mx-auto mt-8 mb-12 group">
+        <div className="relative w-full md:w-80 mx-auto mt-8 group">
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`
