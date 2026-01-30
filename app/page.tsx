@@ -105,7 +105,7 @@ export default function App() {
 
 
   return (
-    <div className=" realtive min-h-screen pb-24 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
+    <div className=" realtive min-h-screen pb-12 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
 
       <div className=" absolute inset-0 hidden md:block overflow-hidden pointer-events-none ">
         <div className=" absolute top-32 left-10 w-72 h-72 rounded-full blur-3xl animate-pulse bg-pulse  " />
