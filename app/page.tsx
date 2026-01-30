@@ -178,7 +178,7 @@ export default function App() {
           Record Directly from your Microphone
         </div>
 
-        <div className="relative w-full md:w-80 mx-auto mt-8 group">
+        <div className="relative w-full md:w-80 mx-auto mt-8 mb-12 group">
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`
@@ -194,7 +194,7 @@ export default function App() {
           >
             <span
               className={`
-                absolute inset-0 mb-4
+                absolute inset-0
                 bg-linear-to-r from-transparent via-white/50 to-transparent
                 -translate-x-full group-hover:translate-x-full
                 transition-transform duration-500 ease-in-out
