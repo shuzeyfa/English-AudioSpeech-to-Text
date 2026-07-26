@@ -15,10 +15,10 @@
 body {
   background: linear-gradient(
     to bottom,
-    var(--color-sixth)   0%,    
-    var(--color-sixth)   60%,    
-    var(--color-fifth)   85%,    
-    var(--color-fourth)  100%    
+    var(--color-primary)   0%,
+    var(--color-primary)   60%,
+    var(--color-pulse)     85%,
+    var(--color-bold)      100%
   );
   background-attachment: fixed;
   font-family: serif;

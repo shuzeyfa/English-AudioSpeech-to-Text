@@ -4,14 +4,29 @@ export async function POST(req: Request) {
   try {
     const audioBuffer = await req.arrayBuffer()
 
+    if (audioBuffer.byteLength === 0) {
+      return NextResponse.json(
+        { text: "No audio data received." },
+        { status: 400 }
+      )
+    }
+
+    // Pick a filename extension matching the audio type the client sent
+    const contentType = req.headers.get("content-type") ?? ""
+    const ext = contentType.includes("wav")
+      ? "wav"
+      : contentType.includes("mpeg") || contentType.includes("mp3")
+      ? "mp3"
+      : "webm"
+
     const formData = new FormData()
     formData.append(
       "file",
       new Blob([audioBuffer]),
-      "audio.wav"
+      `audio.${ext}`
     )
     formData.append("model", "whisper-large-v3")
-    formData.append("language", "am") // Amharic
+    formData.append("language", "en") // English
 
     const groqRes = await fetch(
       "https://api.groq.com/openai/v1/audio/transcriptions",

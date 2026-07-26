@@ -1,15 +1,14 @@
 "use client"
 
-import { div } from "framer-motion/client";
-import { Mic, Sparkle, CheckCircle, Sparkles, Upload, AudioLines} from "lucide-react";
+import { Mic, Sparkles, Upload, AudioLines } from "lucide-react";
 import { useState, useRef } from "react";
 
 
 export default function App() {
 
   const [file, setFile] = useState<File | null>(null)
-  const [output, setoutput] = useState<String>("");
-  const [loading, setloading] = useState<true | false>(false);
+  const [output, setoutput] = useState<string>("");
+  const [loading, setloading] = useState<boolean>(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -86,6 +85,7 @@ export default function App() {
 
       const res = await fetch("/api/transcribe", {
         method: "POST",
+        headers: { "Content-Type": finalFile.type || "application/octet-stream" },
         body: await finalFile.arrayBuffer(),
       })
 
@@ -105,7 +105,7 @@ export default function App() {
 
 
   return (
-    <div className=" realtive min-h-screen pb-12 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
+    <div className=" relative min-h-screen pb-12 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
 
       <div className=" absolute inset-0 hidden md:block overflow-hidden pointer-events-none ">
         <div className=" absolute top-32 left-10 w-72 h-72 rounded-full blur-3xl animate-pulse bg-pulse  " />
@@ -147,7 +147,7 @@ export default function App() {
           <label
           htmlFor="audio-upload" 
           className=" w-[95%] md:w-4xl h-100 z-20 my-12 mx-auto bg-secondary hover:bg-primary hover:cursor-pointer rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-evenly shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-transform duration-100 ease-in-out group ">
-            <input onChange={handleUpload} id="audio-upload" accept="audio//mp3,audio/wav" className="hidden" type="file" />
+            <input onChange={handleUpload} id="audio-upload" accept="audio/mpeg,audio/wav,.mp3,.wav" className="hidden" type="file" />
             
             <div className=" w-32 h-32 bg-[#5A7086] group-hover:bg-pulse rounded-2xl rotate-0 group-hover:rotate-6 transition-transform duration-100 ease-in-out flex flex-col items-center justify-center ">
               <Upload className=" w-[60%] h-[60%] text-white/90 "/>
@@ -186,9 +186,9 @@ export default function App() {
               w-full h-20 px-6
               flex items-center justify-center gap-4
               rounded-2xl border border-white/20
-              ${isRecording ? "bg-red-600" : "bg-gray-900"} text-white font-bold text-2xl
+              ${isRecording ? "bg-red-600 hover:bg-red-400" : "bg-gray-900 hover:bg-gray-800"} text-white font-bold text-2xl
               transition-all duration-400 ease-out
-              hover:${isRecording ? "bg-red-400" : "bg-gray-800"} hover:shadow-xl
+              hover:shadow-xl
               active:scale-98
             `}
           >
