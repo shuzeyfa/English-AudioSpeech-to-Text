@@ -1,25 +1,18 @@
 @import "tailwindcss";
 
-/* globals.css or tailwind.config.ts */
-
 @theme inline {
-  --color-primary: #22384D;
-  --color-secondary: #22384D;
+  /* Canvas and panel: two close but distinct dark blues */
+  --color-primary: #22384D;   /* page canvas */
+  --color-secondary: #1C2F41; /* panels / cards */
   --color-text: #EBF1FA;
-  --color-pulse: #5F7F99;
-  --color-bold: #101F2C;
+  --color-pulse: #5F7F99;     /* accent */
+
+  /* Geist fonts loaded in app/layout.tsx */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-
-/* Example global background gradient */
 body {
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary)   0%,
-    var(--color-primary)   60%,
-    var(--color-pulse)     85%,
-    var(--color-bold)      100%
-  );
-  background-attachment: fixed;
-  font-family: serif;
+  background: var(--color-primary);
+  font-family: var(--font-sans);
 }

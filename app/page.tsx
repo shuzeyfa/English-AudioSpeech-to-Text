@@ -1,14 +1,33 @@
 "use client"
 
-import { Mic, Sparkles, Upload, AudioLines } from "lucide-react";
+import { Mic, Square, Upload, AudioLines, RotateCcw } from "lucide-react";
 import { useState, useRef } from "react";
 
+// Languages the user can pick. "auto" lets the server detect from the transcript.
+const LANGUAGES = [
+  { code: "auto", label: "Auto Detect" },
+  { code: "en", label: "English" },
+  { code: "ar", label: "العربية (Arabic)" },
+  { code: "ur", label: "اردو (Urdu)" },
+] as const
+
+type LanguageCode = (typeof LANGUAGES)[number]["code"]
+
+// Shape of a successful /api/transcribe response.
+interface TranscribeResult {
+  transcript: string   // original-language transcript from Whisper
+  language: string     // resolved language code (en | ar | ur)
+  english?: string     // English pivot text (only for ar/ur audio)
+  amharic: string      // final Amharic translation from Addis AI
+}
 
 export default function App() {
 
   const [file, setFile] = useState<File | null>(null)
-  const [output, setoutput] = useState<string>("");
-  const [loading, setloading] = useState<boolean>(false);
+  const [language, setLanguage] = useState<LanguageCode>("auto")
+  const [result, setResult] = useState<TranscribeResult | null>(null)
+  const [error, setError] = useState<string>("")
+  const [loading, setloading] = useState<boolean>(false)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -21,7 +40,14 @@ export default function App() {
     if (f) setFile(f);
   }
 
-  
+  // Reset everything so the user can transcribe another file.
+  const handleReset = () => {
+    setFile(null)
+    setResult(null)
+    setError("")
+  }
+
+
   const startRecording = async () => {
       //the process is like this
       // 1 - get permission
@@ -75,161 +101,257 @@ export default function App() {
   }
 
 
-  
+
   async function handleTranscribe(audioFile?: File) {
     const finalFile = audioFile ?? file;
     if (!finalFile) return
 
     try {
       setloading(true)
+      setError("")
+      setResult(null)
+
+      // Send the audio + selected language as multipart form data.
+      const formData = new FormData()
+      formData.append("audio", finalFile)
+      formData.append("language", language)
 
       const res = await fetch("/api/transcribe", {
         method: "POST",
-        headers: { "Content-Type": finalFile.type || "application/octet-stream" },
-        body: await finalFile.arrayBuffer(),
+        body: formData,
       })
 
       const data = await res.json()
-      setoutput(data.text)
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong.")
+        return
+      }
+
+      setResult(data)
     } catch (err) {
       console.error(err)
-      setoutput("Something went wrong.")
+      setError("Something went wrong. Please try again.")
     } finally {
       setloading(false)
     }
   }
 
 
-
+  const languageLabel = (code: string) =>
+    LANGUAGES.find((l) => l.code === code)?.label ?? code
 
 
 
   return (
-    <div className=" relative min-h-screen pb-12 md:pb-0 bg-linear-to-r from-primary to-secondary overflow-hidden ">
-
-      <div className=" absolute inset-0 hidden md:block overflow-hidden pointer-events-none ">
-        <div className=" absolute top-32 left-10 w-72 h-72 rounded-full blur-3xl animate-pulse bg-pulse  " />
-        <div className=" absolute top-1/2 right-1/2 w-72 h-72 rounded-full  blur-3xl animate-pulse overflow-hidden bg-pulse opacity-30  " />
-        <div className=" absolute bottom-32 right-30 w-72 h-72 rounded-full overflow-hidden blur-3xl animate-pulse bg-pulse" />
-      </div>
+    <div className="min-h-screen bg-primary text-text font-sans">
 
       {/* Header */}
-      <header className="relative bg-primary backdrop-blur-xl border-b border-white/20 shadow-2xl top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-linear-to-r from-primary to-secondary rounded-2xl blur-lg opacity-75 animate-pulse" />
-                <div className="relative w-14 h-14 bg-linear-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-2xl">
-                  <Mic className="w-7 h-7 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className="font-black text-text text-2xl tracking-tight">
-                  English Speech Transcriber
-                </h1>
-                <p className="text-xs text-text font-medium flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  AI-Powered English Speech Recognition
-                </p>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-              <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-              <span className="text-xs text-white font-medium">Online</span>
-            </div>
+      <header className="border-b border-white/15">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-3">
+          <div className="w-9 h-9 border border-white/20 rounded-sm flex items-center justify-center">
+            <Mic className="w-4 h-4" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-base font-semibold tracking-tight leading-none">
+              Speech to Amharic
+            </h1>
+            <p className="font-mono text-[11px] text-white/50 mt-1.5 uppercase tracking-wider">
+              en · ar · ur → am
+            </p>
           </div>
         </div>
       </header>
 
-      {!file && 
-        <div>
-          <label
-          htmlFor="audio-upload" 
-          className=" w-[95%] md:w-4xl h-100 z-20 my-12 mx-auto bg-secondary hover:bg-primary hover:cursor-pointer rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-evenly shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-transform duration-100 ease-in-out group ">
-            <input onChange={handleUpload} id="audio-upload" accept="audio/mpeg,audio/wav,.mp3,.wav" className="hidden" type="file" />
-            
-            <div className=" w-32 h-32 bg-[#5A7086] group-hover:bg-pulse rounded-2xl rotate-0 group-hover:rotate-6 transition-transform duration-100 ease-in-out flex flex-col items-center justify-center ">
-              <Upload className=" w-[60%] h-[60%] text-white/90 "/>
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+
+        {/* ── Input section ─────────────────────────────────────────── */}
+        {!file && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-mono text-[11px] uppercase tracking-wider text-white/50">
+                Input
+              </h2>
+
+              {/* Language selector — a compact control on the section rail */}
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="language-select"
+                  className="font-mono text-[11px] uppercase tracking-wider text-white/50"
+                >
+                  Language
+                </label>
+                <select
+                  id="language-select"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+                  className="h-8 px-2 rounded-sm bg-secondary text-sm text-text border border-white/20 hover:border-white/40 hover:cursor-pointer focus:outline-none focus:border-pulse"
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className=" text-2xl text-white/90 text-center font-bold ">
-              Upload English Audio</div>
-            <div className=" text-white/90 text-center ">
-              Drag And Drop Your English Audio File Here, or Browse</div>
-            <div className=" flex gap-4 border-2 text-white/90 rounded-2xl border-pulse px-4 py-2 ">
-              <AudioLines /> MP3, WAV
+
+            {/* Upload drop target — dashed border reserved for this control only */}
+            <label
+              htmlFor="audio-upload"
+              className="flex flex-col items-center gap-4 py-14 px-6 rounded-md border border-dashed border-white/25 bg-secondary hover:border-white/50 hover:cursor-pointer transition-colors duration-150 group"
+            >
+              <input onChange={handleUpload} id="audio-upload" accept="audio/mpeg,audio/wav,.mp3,.wav" className="hidden" type="file" />
+
+              <div className="w-12 h-12 rounded-sm border border-white/20 group-hover:border-white/40 flex items-center justify-center transition-colors duration-150">
+                <Upload className="w-5 h-5 text-white/80" />
+              </div>
+
+              <div className="text-center">
+                <div className="font-medium">Upload audio file</div>
+                <div className="text-sm text-white/50 mt-1">
+                  English, Arabic or Urdu speech — drag &amp; drop or browse
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-white/50 border border-white/15 rounded-sm px-2.5 py-1.5">
+                <AudioLines className="w-3.5 h-3.5" /> mp3 · wav
+              </div>
+            </label>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 border-t border-white/15" />
+              <span className="font-mono text-[11px] uppercase tracking-wider text-white/40">or</span>
+              <div className="flex-1 border-t border-white/15" />
             </div>
-        
-        </label>
 
-        <div className="max-w-4xl mx-auto my-4 relative h-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-black/50"></div>
-          </div>
-
-          <div className="relative flex justify-center">
-            <span className="px-4 bg-primary backdrop-blur-md rounded-full text-white/90 font-bold text-sm">
-              OR
-            </span>
-          </div>
-        </div>
-
-        <div className=" text-white/90 text-[min(10vw, 70px)] max-w-md mx-auto mt-12 text-2xl text-center ">
-          Record Directly from your Microphone
-        </div>
-
-        <div className="relative w-[90%] md:w-80 mx-auto mt-8 group">
-          <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`
-              relative overflow-hidden
-              w-full h-20 px-6
-              flex items-center justify-center gap-4
-              rounded-2xl border border-white/20
-              ${isRecording ? "bg-red-600 hover:bg-red-400" : "bg-gray-900 hover:bg-gray-800"} text-white font-bold text-2xl
-              transition-all duration-400 ease-out
-              hover:shadow-xl
-              active:scale-98
-            `}
-          >
-            <span
+            {/* Record control — a button, not a hero */}
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
               className={`
-                absolute inset-0
-                bg-linear-to-r from-transparent via-white/50 to-transparent
-                -translate-x-full group-hover:translate-x-full
-                transition-transform duration-500 ease-in-out
-                pointer-events-none
+                w-full h-12 px-4
+                flex items-center justify-center gap-2.5
+                rounded-md border font-medium
+                transition-colors duration-150
+                ${isRecording
+                  ? "border-red-500/60 bg-red-950/40 text-red-200 hover:bg-red-950/60"
+                  : "border-white/20 bg-secondary text-text hover:border-white/40"}
               `}
-            />
+            >
+              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              <span>{isRecording ? "Stop recording" : "Record from microphone"}</span>
+            </button>
+          </section>
+        )}
 
-            <Mic className="w-10 h-10 text-white/90 group-hover:text-white transition-colors" />
-            <span className="group-hover:text-white transition-colors">{isRecording ? "Stop Recording" : "Record Audio"}</span>
-            <Sparkles className="w-8 h-8 text-white/70 group-hover:text-white transition-colors" />
-          </button>
-        </div>
-        </div>
-      }
+        {/* ── Output section ────────────────────────────────────────── */}
+        {file && (
+          <div className="space-y-8">
 
-      {file && (
-        <div className="max-w-4xl mx-auto my-8 space-y-4">
+            {/* Control bar: file identity + actions */}
+            <section>
+              <h2 className="font-mono text-[11px] uppercase tracking-wider text-white/50 mb-4">
+                Audio
+              </h2>
 
-          <button
-            onClick={() => handleTranscribe()}
-            disabled={loading}
-            className="px-6 py-3 rounded-xl bg-gray-900 hover:cursor-pointer hover:bg-gray-800 text-white font-bold border border-gray-800 disabled:opacity-50"
-          >
-            {loading ? "Transcribing..." : "Transcribe Audio"}
-          </button>
+              <div className="flex flex-wrap items-center gap-3 border border-white/15 bg-secondary rounded-md px-4 py-3">
+                <AudioLines className="w-4 h-4 text-white/60 shrink-0" />
+                <span className="font-mono text-sm text-white/80 truncate flex-1 min-w-0">
+                  {file.name}
+                </span>
 
-          <p className="bg-secondary border-2 border-dashed border-gray-500 min-h-80 text-white/70 rounded-2xl overflow-hidden p-4">
-            {output || "Your English transcription will appear here..."}
-          </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleTranscribe()}
+                    disabled={loading}
+                    className="h-9 px-4 rounded-sm bg-text text-primary text-sm font-semibold hover:cursor-pointer hover:bg-white disabled:opacity-50 transition-colors duration-150"
+                  >
+                    {loading ? "Working…" : "Transcribe & Translate"}
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    disabled={loading}
+                    className="h-9 px-3 rounded-sm border border-white/20 text-sm text-white/80 hover:cursor-pointer hover:border-white/40 disabled:opacity-50 transition-colors duration-150 flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Start over
+                  </button>
+                </div>
+              </div>
 
-        </div>
-      )}
+              {/* Error message */}
+              {error && (
+                <p className="mt-3 border border-red-500/40 bg-red-950/30 text-red-200 text-sm rounded-md px-4 py-3">
+                  {error}
+                </p>
+              )}
+            </section>
 
+            {/* Primary output: Amharic — the reason the app exists */}
+            <section>
+              <h2 className="font-mono text-[11px] uppercase tracking-wider text-pulse mb-4">
+                Amharic — አማርኛ
+              </h2>
 
+              <div className="border-l-2 border-pulse bg-secondary rounded-md px-6 py-6">
+                <p className="text-2xl leading-relaxed min-h-24">
+                  {result?.amharic || (
+                    <span className="text-white/40 text-base">
+                      {loading ? "Translating to Amharic…" : "የአማርኛ ትርጉም እዚህ ይታያል…"}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </section>
 
+            {/* Secondary output: source text */}
+            <section>
+              <h2 className="font-mono text-[11px] uppercase tracking-wider text-white/50 mb-4">
+                Source
+              </h2>
+
+              <div className="border border-white/15 rounded-md divide-y divide-white/15">
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-white/50">
+                      Transcript
+                    </span>
+                    {result && (
+                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded-sm border border-white/20 text-white/70">
+                        {languageLabel(result.language)}
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className="text-sm text-white/80 leading-relaxed"
+                    dir={result && (result.language === "ar" || result.language === "ur") ? "rtl" : "ltr"}
+                  >
+                    {result?.transcript || (
+                      <span className="text-white/40">
+                        {loading ? "Listening to your audio…" : "Your transcript will appear here…"}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* English pivot — only present for Arabic/Urdu audio */}
+                {result?.english && (
+                  <div className="px-4 py-3">
+                    <div className="mb-2">
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-white/50">
+                        English
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/80 leading-relaxed">{result.english}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }

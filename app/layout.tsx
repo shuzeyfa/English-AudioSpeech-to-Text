@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "English Audio To Text Translator",
-  description: "Convert spoken English audio to accurate text instantly. Perfect for meetings, lectures, interviews, notes, and voice memos.",
+  title: "Speech to Amharic Translator",
+  description: "Transcribe English, Arabic, or Urdu speech and translate it to Amharic instantly. Powered by Whisper and Addis AI.",
 };
 
 export default function RootLayout({
